@@ -2,16 +2,17 @@
 
 #include <Arduino.h>
 #include <SPI.h>
-#if not defined (_VARIANT_ARDUINO_DUE_X_) && not defined (_VARIANT_ARDUINO_ZERO_)
-#include <SoftwareSerial.h>
-#endif
 
 #include "Adafruit_BLE.h"
 #include "Adafruit_BluefruitLE_SPI.h"
 #include "Adafruit_BLEGatt.h"
 
-#include "BluefruitConfig.h"
+#define BUFSIZE                        160   // Size of the read buffer for incoming data
+#define VERBOSE_MODE                   false  // If set to 'true' enables debug output
 
+#define BLUEFRUIT_SPI_CS               8
+#define BLUEFRUIT_SPI_IRQ              7
+#define BLUEFRUIT_SPI_RST              4    // Optional but recommended, set to -1 if unused
 
 #define FACTORYRESET_ENABLE      1
 #define CHANNEL_NUMBER 7
@@ -48,15 +49,21 @@ void setup(void)
 
 	ble.echo(false);
 
+	/* ------------ add service ---------------------- */
+
 	htsServiceId = gatt.addService(0x4242);
 
 	if (htsServiceId == 0)
 		error(F("Could not add service"));
 
+	/* ------------ add characteristic ---------------------- */
+
 	htsMeasureCharId = gatt.addCharacteristic(0x4343, GATT_CHARS_PROPERTIES_WRITE_WO_RESP, 6, 6, BLE_DATATYPE_BYTEARRAY);
 
 	if (htsMeasureCharId == 0)
 		error(F("Could not add characteristic"));
+
+	/* ------------------------------------------------------- */
 
 	Serial.print(F("Performing a SW reset (service changes require a reset): "));
 	ble.reset();
@@ -67,25 +74,6 @@ void setup(void)
 
 void loop(void)
 {
-
-	// memset(data, 0, sizeof(data));
-	//
-	// data[0] |= gaz >> 2;
-	// data[1] |= gaz << 6;
-	//
-	// data[1] |= yaw >> 4;
-	// data[2] |= yaw << 4;
-	//
-	// data[2] |= roll >> 6;
-	// data[3] |= roll << 2;
-	//
-	// data[3] |= pitch >> 8;
-	// data[4] |= pitch << 0;
-	//
-	// data[5] |= aux[0] << 4;
-	// data[5] |= aux[1] << 2;
-	// data[5] |= aux[2] << 0;
-
 	/* ------------ Read characteristic ---------------------- */
 
 		gatt.getChar(1);
