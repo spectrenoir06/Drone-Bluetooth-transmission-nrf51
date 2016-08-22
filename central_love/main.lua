@@ -40,9 +40,14 @@ function love.update(dt)
 
 		if joy then
 			gaz   = 511 * joy:getGamepadAxis( "lefty" ) + 512
-			yaw   = 511 * joy:getGamepadAxis( "leftx" ) + 512
 			roll  = 511 * joy:getGamepadAxis( "rightx" ) + 512
-			pitch = 511 * joy:getGamepadAxis( "righty" ) + 512
+			pitch = (511 * joy:getGamepadAxis( "righty" ) + 512)
+			yaw   = (511 * joy:getGamepadAxis( "leftx" ) + 512)
+			if joy:isGamepadDown("a") then
+				aux1 = 1
+			else
+				aux1 = 0
+			end
 		else
 			gaz, yaw, roll, pitch = 42, 42, 42, 42
 		end
@@ -52,14 +57,14 @@ function love.update(dt)
 		data[0] = bor(data[0], rshift(gaz, 2))    -- data[0] |= gaz >> 2;
 		data[1] = bor(data[1], lshift(gaz, 6))    -- data[1] |= gaz << 6;
 
-		data[1] = bor(data[1], rshift(yaw, 4));   -- data[1] |= yaw >> 4;
-		data[2] = bor(data[2], lshift(yaw, 4));   -- data[2] |= yaw << 4;
+		data[1] = bor(data[1], rshift(roll, 4));   -- data[1] |= yaw >> 4;
+		data[2] = bor(data[2], lshift(roll, 4));   -- data[2] |= yaw << 4;
 
-		data[2] = bor(data[2], rshift(roll, 6));  -- data[2] |= roll >> 6;
-		data[3] = bor(data[3], lshift(roll, 2));  -- data[3] |= roll << 2;
+		data[2] = bor(data[2], rshift(pitch, 6));  -- data[2] |= roll >> 6;
+		data[3] = bor(data[3], lshift(pitch, 2));  -- data[3] |= roll << 2;
 
-		data[3] = bor(data[3], rshift(pitch, 8)); -- data[3] |= pitch >> 8;
-		data[4] = bor(data[4], lshift(pitch, 0)); -- data[4] |= pitch << 0;
+		data[3] = bor(data[3], rshift(yaw, 8)); -- data[3] |= pitch >> 8;
+		data[4] = bor(data[4], lshift(yaw, 0)); -- data[4] |= pitch << 0;
 
 		data[5] = bor(data[5], lshift(aux1%4,4))  -- data[5] |= aux[0] << 4;
 		data[5] = bor(data[5], lshift(aux2%4,2))  -- data[5] |= aux[1] << 2;
@@ -102,15 +107,15 @@ end
 
 function love.gamepadpressed( joystick, button )
 	print("button",button)
-	if button == "a" then
-		aux1 = (aux1 + 1) % 4
-	end
-	if button == "b" then
-		aux2 = (aux2 + 1) % 4
-	end
-	if button == "x" then
-		aux3 = (aux3 + 1) % 4
-	end
+	-- if button == "a" then
+	-- 	aux1 = (aux1 + 1) % 1
+	-- end
+	-- if button == "b" then
+	-- 	aux2 = (aux2 + 1) % 4
+	-- end
+	-- if button == "x" then
+	-- 	aux3 = (aux3 + 1) % 4
+	-- end
 end
 
 

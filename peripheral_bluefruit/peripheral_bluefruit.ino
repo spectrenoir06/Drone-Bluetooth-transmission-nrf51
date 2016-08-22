@@ -35,6 +35,7 @@ void error(const __FlashStringHelper*err) {
 void setup(void)
 {
 	Serial.begin(115200);
+	Serial1.begin(115200);
 
 	Serial.print(F("Initialising the Bluefruit LE module: "));
 
