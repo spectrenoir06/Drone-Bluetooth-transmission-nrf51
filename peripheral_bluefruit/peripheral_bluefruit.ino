@@ -112,7 +112,7 @@ void loop(void)
 	// Serial.println((char*)data);
 
 
-	/* ----------------- MSP set raw rc ------------------ */
+	/* ----------------- MSP_SET_RAW_RC ------------------ */
 
 	Serial1.write(0x24);
 	Serial1.write(0x4D);
