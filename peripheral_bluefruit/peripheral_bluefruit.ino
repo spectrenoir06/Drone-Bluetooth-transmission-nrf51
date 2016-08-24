@@ -34,8 +34,8 @@ void error(const __FlashStringHelper*err) {
 
 void setup(void)
 {
-	Serial.begin(115200);
-	Serial1.begin(115200);
+	Serial.begin(115200);  // usb
+	Serial1.begin(115200); // nano
 
 	Serial.print(F("Initialising the Bluefruit LE module: "));
 
@@ -73,46 +73,77 @@ void setup(void)
 	data = (uint8_t*)gatt.buffer;
 }
 
+uint8_t test[] = {
+	0x10, // size
+	0xC8, // type
+	0xDC,
+	0x05,
+	0xDC, // roll
+	0x05,
+	0xDC, // yaw
+	0x05,
+	0xE8,
+	0x03,
+};
+
 void loop(void)
 {
-	/* ------------ Read characteristic ---------------------- */
+	// /* ------------ Read characteristic ---------------------- */
+	//
+	// 	gatt.getChar(1);
+	//
+	// /* ------------ Convert data[6] to ppm[7] ---------------- */
+	//
+	// ppm[0] = (data[0] << 2 | ((data[1] >> 6) & 0x03)) & 0x3ff;
+	// ppm[1] = (data[1] << 4 | ((data[2] >> 4) & 0x0f)) & 0x3ff;
+	// ppm[2] = (data[2] << 6 | ((data[3] >> 2) & 0x3f)) & 0x3ff;
+	// ppm[3] = (data[3] << 8 | ((data[4] >> 0) & 0xff)) & 0x3ff;
+	//
+	// ppm[4] = ((data[5] >> 4) & 0x3) * 341;
+	// ppm[5] = ((data[5] >> 2) & 0x3) * 341;
+	// ppm[6] = ((data[5] >> 0) & 0x3) * 341;
+	//
+	// /* ------------ Display info on Serial USB --------------- */
+	//
+	// for  (uint8_t i=0; i < 7; i++) {
+	// 	Serial.print(ppm[i], DEC);
+	// 	Serial.print(", ");
+	// }
+	// Serial.println((char*)data);
 
-		gatt.getChar(1);
 
-	/* ------------ Convert data[6] to ppm[7] ---------------- */
+	/* ----------------- MSP set raw rc ------------------ */
 
-	ppm[0] = (data[0] << 2 | ((data[1] >> 6) & 0x03)) & 0x3ff;
-	ppm[1] = (data[1] << 4 | ((data[2] >> 4) & 0x0f)) & 0x3ff;
-	ppm[2] = (data[2] << 6 | ((data[3] >> 2) & 0x3f)) & 0x3ff;
-	ppm[3] = (data[3] << 8 | ((data[4] >> 0) & 0xff)) & 0x3ff;
+	Serial1.write(0x24);
+	Serial1.write(0x4D);
+	Serial1.write(0x3C);
 
-	ppm[4] = ((data[5] >> 4) & 0x3) * 341;
-	ppm[5] = ((data[5] >> 2) & 0x3) * 341;
-	ppm[6] = ((data[5] >> 0) & 0x3) * 341;
+	uint8_t crc = 0;
 
-	/* ------------ Display info on Serial USB --------------- */
+	test[2]++;
 
-	for  (uint8_t i=0; i < 7; i++) {
-		Serial.print(ppm[i], DEC);
-		Serial.print(", ");
+	for (uint8_t i=0; i < 8; i++) {
+		Serial1.write(test[i]);
+		crc = crc ^ test[i];
 	}
-	Serial.println((char*)data);
+
+	Serial1.write(crc);
 
 	/* ------------ Spektrum 1028 serial --------------- */
 
-	Serial1.write(0x03);
-	Serial1.write(0x01);
-	uint16_t m = 0;
-	for(uint8_t i=0; i < CHANNEL_NUMBER; i++)
-	{
-		ppm[i] &= 0x3ff;
-		ppm[i] |= (m++ << 10);
-		Serial1.write((ppm[i] >> 8) & 0xff);
-		Serial1.write(ppm[i] & 0xff);
-	}
+	// Serial1.write(0x03);
+	// Serial1.write(0x01);
+	// uint16_t m = 0;
+	// for(uint8_t i=0; i < CHANNEL_NUMBER; i++)
+	// {
+	// 	ppm[i] &= 0x3ff;
+	// 	ppm[i] |= (m++ << 10);
+	// 	Serial1.write((ppm[i] >> 8) & 0xff);
+	// 	Serial1.write(ppm[i] & 0xff);
+	// }
 
 	/* -------------------------------------------------- */
 
 
-	delay(5);
+	delay(200);
 }
