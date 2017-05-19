@@ -15,7 +15,7 @@
 #define BLUEFRUIT_SPI_RST              4    // Optional but recommended, set to -1 if unused
 
 #define FACTORYRESET_ENABLE      1
-#define CHANNEL_NUMBER 7
+#define CHANNEL_NUMBER 8
 
 int8_t led = 13;
 
@@ -73,43 +73,32 @@ void setup(void)
 	data = (uint8_t*)gatt.buffer;
 }
 
-uint8_t test[] = {
-	0x10, // size
-	0xC8, // type
-	0xDC,
-	0x05,
-	0xDC, // roll
-	0x05,
-	0xDC, // yaw
-	0x05,
-	0xE8,
-	0x03,
-};
-
 void loop(void)
 {
-	// /* ------------ Read characteristic ---------------------- */
-	//
-	// 	gatt.getChar(1);
-	//
-	// /* ------------ Convert data[6] to ppm[7] ---------------- */
-	//
-	// ppm[0] = (data[0] << 2 | ((data[1] >> 6) & 0x03)) & 0x3ff;
-	// ppm[1] = (data[1] << 4 | ((data[2] >> 4) & 0x0f)) & 0x3ff;
-	// ppm[2] = (data[2] << 6 | ((data[3] >> 2) & 0x3f)) & 0x3ff;
-	// ppm[3] = (data[3] << 8 | ((data[4] >> 0) & 0xff)) & 0x3ff;
-	//
-	// ppm[4] = ((data[5] >> 4) & 0x3) * 341;
-	// ppm[5] = ((data[5] >> 2) & 0x3) * 341;
-	// ppm[6] = ((data[5] >> 0) & 0x3) * 341;
-	//
+	/* ------------ Read characteristic ---------------------- */
+
+		gatt.getChar(1);
+
+	/* ------------ Convert data[6] to ppm[7] ---------------- */
+
+	ppm[0] = (data[0] << 2 | ((data[1] >> 6) & 0x03)) & 0x3ff;
+	ppm[1] = (data[1] << 4 | ((data[2] >> 4) & 0x0f)) & 0x3ff;
+	ppm[2] = (data[2] << 6 | ((data[3] >> 2) & 0x3f)) & 0x3ff;
+	ppm[3] = (data[3] << 8 | ((data[4] >> 0) & 0xff)) & 0x3ff;
+
+	ppm[4] = ((data[5] >> 4) & 0x3) * 341;
+	ppm[5] = ((data[5] >> 2) & 0x3) * 341;
+	ppm[6] = ((data[5] >> 0) & 0x3) * 341;
+	ppm[7] = ((data[5] >> 6) & 0x3) * 341;
+
+
 	// /* ------------ Display info on Serial USB --------------- */
 	//
 	// for  (uint8_t i=0; i < 7; i++) {
 	// 	Serial.print(ppm[i], DEC);
 	// 	Serial.print(", ");
 	// }
-	// Serial.println((char*)data);
+	Serial.println((char*)data);
 
 
 	/* ----------------- MSP_SET_RAW_RC ------------------ */
@@ -117,14 +106,26 @@ void loop(void)
 	Serial1.write(0x24);
 	Serial1.write(0x4D);
 	Serial1.write(0x3C);
+	Serial1.write(0x10);
+	Serial1.write(0xC8);
 
-	uint8_t crc = 0;
+	ppm[0] = map(ppm[0], 0, 1023, 1000, 2000);
+	ppm[1] = map(ppm[1], 0, 1023, 1000, 2000);
+	ppm[2] = map(ppm[2], 0, 1023, 1000, 2000);
+	ppm[3] = map(ppm[3], 0, 1023, 1000, 2000);
 
-	test[2]++;
+	ppm[4] = map(ppm[4], 0, 1023, 1000, 2000);
+	ppm[5] = map(ppm[5], 0, 1023, 1000, 2000);
+	ppm[6] = map(ppm[6], 0, 1023, 1000, 2000);
+	ppm[7] = map(ppm[7], 0, 1023, 1000, 2000);
+
+	uint8_t crc = 0xD8; // 0x10 ^ 0xC8
 
 	for (uint8_t i=0; i < 8; i++) {
-		Serial1.write(test[i]);
-		crc = crc ^ test[i];
+		Serial1.write(ppm[i] & 0xff);
+		crc = crc ^ (ppm[i] & 0xff);
+		Serial1.write(ppm[i] >> 8);
+		crc = crc ^ ppm[ppm[i] >> 8];
 	}
 
 	Serial1.write(crc);
